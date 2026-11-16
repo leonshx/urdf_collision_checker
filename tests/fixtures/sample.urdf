@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- Original regression fixture, licensed MIT; units are meters/radians. -->
+<robot name="collision_fixture">
+  <link name="base">
+    <collision><geometry><sphere radius="0.25"/></geometry></collision>
+    <collision><origin xyz="0 0 0.8"/><geometry><box size="0.2 0.2 0.2"/></geometry></collision>
+  </link>
+  <link name="spacer"/>
+  <joint name="mount" type="fixed"><parent link="base"/><child link="spacer"/></joint>
+  <link name="arm"><collision><origin xyz="0.55 0 0"/><geometry><sphere radius="0.15"/></geometry></collision></link>
+  <joint name="swing" type="continuous"><parent link="spacer"/><child link="arm"/><axis xyz="0 0 1"/></joint>
+  <link name="tip"><collision><geometry><sphere radius="0.15"/></geometry></collision></link>
+  <joint name="extension" type="prismatic"><parent link="arm"/><child link="tip"/><origin xyz="0.1 0 0"/><axis xyz="1 0 0"/><limit lower="0" upper="0.8" effort="1" velocity="1"/></joint>
+  <link name="obstacle"><collision><geometry><sphere radius="0.18"/></geometry></collision></link>
+  <joint name="fixed_obstacle" type="fixed"><parent link="base"/><child link="obstacle"/><origin xyz="0.6 0 0"/></joint>
+  <link name="far"><collision><geometry><sphere radius="0.1"/></geometry></collision></link>
+  <joint name="fixed_far" type="fixed"><parent link="base"/><child link="far"/><origin xyz="0 0 4"/></joint>
+  <link name="finger"><collision><geometry><box size="0.05 0.05 0.05"/></geometry></collision></link>
+  <joint name="finger_mimic" type="prismatic"><parent link="tip"/><child link="finger"/><axis xyz="0 1 0"/><limit lower="0" upper="0.4" effort="1" velocity="1"/><mimic joint="extension" multiplier="0.05" offset="0"/></joint>
+</robot>

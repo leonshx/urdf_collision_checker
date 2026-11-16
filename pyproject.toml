@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "urdf-collision-checker"
+version = "0.1.0"
+description = "Local URDF self-collision matrix editor and pair selection tool"
+requires-python = ">=3.12"
+dependencies = ["pin==4.1.0", "coal==3.0.3", "fastapi==0.163.1", "uvicorn==0.54.0", "PyYAML==6.0.3", "numpy==2.5.5", "websockets==17.4"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "httpx>=0.28"]
+xacro = ["xacro>=2"]
+dev = ["pytest>=8", "httpx>=0.28", "playwright==1.65.2", "nodejs-wheel==24.19.0"]
+
+[project.scripts]
+urdf-collision-checker = "collision_checker.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["collision_checker*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

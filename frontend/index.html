@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Collision Studio · URDF 自碰撞配置</title>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="brand-icon">◈</span>
+        <div>
+          COLLISION <strong>STUDIO</strong><small>URDF 自碰撞配置工作台</small>
+        </div>
+      </div>
+      <div id="model-label">未加载模型</div>
+      <div class="header-actions">
+        <button id="open-project">打开工程</button
+        ><button id="save-project">保存工程</button
+        ><button id="export" class="primary">生成配置 ↗</button>
+      </div>
+    </header>
+    <main>
+      <aside class="left panel">
+        <div class="section-title">
+          <span>01 / 模型</span><span class="tag">LOCAL</span>
+        </div>
+        <label
+          >URDF / Xacro 路径
+          <div class="row">
+            <input
+              id="model-path"
+              placeholder="/path/to/robot.urdf"
+              value="examples/mabi_mobile/urdf/mabi_mobile.urdf"
+            /><button id="browse" title="浏览本地文件">…</button>
+          </div></label
+        >
+        <details>
+          <summary>资源路径与 Xacro 参数</summary>
+          <label
+            >包名 → 路径（JSON）<textarea
+              id="packages"
+              rows="3"
+              placeholder='{"my_robot": "/path/to/my_robot"}'
+            >
+{}</textarea></label
+          ><label
+            >Xacro 参数（JSON）<textarea id="xacro-args" rows="2">{}</textarea>
+          </label>
+        </details>
+        <button id="load" class="wide primary">加载机器人</button>
+        <div class="section-title spaced">
+          <span>参与检测的 LINK</span><span id="link-count" class="tag">0</span>
+        </div>
+        <input id="link-search" placeholder="搜索 link…" />
+        <div class="row">
+          <button id="all-links">全部参与</button
+          ><button id="no-links">全部排除</button>
+        </div>
+        <div id="links" class="link-list">
+          <p class="muted">加载模型后，选择参与检测的 link。</p>
+        </div>
+        <div class="aside-note">
+          排除 link 保留运动学链。矩阵以 link 对计数；每对可能包含多个几何检测。
+        </div>
+      </aside>
+      <section class="workspace">
+        <section id="viewport">
+          <div class="view-tools">
+            <label
+              ><input id="show-collision" type="checkbox" checked />
+              Collision</label
+            ><label><input id="show-visual" type="checkbox" /> Visual</label
+            ><label
+              >透明度
+              <input
+                id="opacity"
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value="0.8" /></label
+            ><button id="fit">适应模型</button
+            ><button id="focus">聚焦选中</button>
+          </div>
+          <div class="view-caption">
+            <span class="live-dot"></span
+            ><span id="view-status">等待机器人模型</span>
+          </div>
+          <div class="view-hint">
+            拖动空白处旋转视角 · 拖动连杆调整关节 · 滚轮缩放
+          </div>
+          <div id="empty-view">
+            <div>◈</div>
+            <h1>从几何，到有效碰撞对</h1>
+            <p>加载 URDF，采样分析，在矩阵中审查并导出。</p>
+          </div>
+        </section>
+        <section class="matrix-panel panel">
+          <div class="section-title">
+            <span>02 / 自碰撞矩阵</span
+            ><span class="muted">☑ 禁用检测 · 点击单元格高亮</span
+            ><span id="pair-count" class="tag">0 对</span>
+          </div>
+          <div class="toolbar">
+            <input id="matrix-search" placeholder="筛选 link 名称…" /><select
+              id="reason-filter"
+            >
+              <option value="">全部分类</option>
+              <option>Adjacent</option>
+              <option>Default</option>
+              <option>Always</option>
+              <option>Never</option>
+              <option>User</option>
+              <option>Excluded</option>
+              <option>TopK</option>
+              <option value="enabled">启用</option></select
+            ><button id="enable-filtered">启用筛选项</button
+            ><button id="disable-filtered">禁用筛选项</button
+            ><button id="reset-selection">恢复自动建议</button>
+          </div>
+          <div class="legend">
+            <span class="Adjacent">相邻</span
+            ><span class="Default">默认碰撞</span
+            ><span class="Always">始终碰撞</span
+            ><span class="Never">采样未碰撞</span><span class="User">人工</span
+            ><span class="TopK">Top-K</span><span class="Excluded">排除</span>
+          </div>
+          <div id="matrix" class="matrix-scroll">
+            <div class="empty-matrix">
+              采样后显示分类；采样前也可以手动选择。
+            </div>
+          </div>
+        </section>
+      </section>
+      <aside class="right panel">
+        <div class="section-title">03 / 分析与筛选</div>
+        <div class="two-cols">
+          <label
+            >采样次数<input
+              id="samples"
+              type="number"
+              min="1"
+              max="1000000"
+              value="10000" /></label
+          ><label
+            >随机种子<input id="seed" type="number" min="0" value="42" /></label
+          ><label
+            >Always 比例<input
+              id="always"
+              type="number"
+              min="0.01"
+              max="1"
+              step="0.01"
+              value="0.95" /></label
+          ><label
+            >默认安全距离 / m<input
+              id="default-distance"
+              type="number"
+              min="0"
+              step="0.01"
+              value="0.05"
+          /></label>
+        </div>
+        <label
+          ><input id="global-enabled" type="checkbox" checked /> 全局
+          enabled（导出）</label
+        >
+        <details>
+          <summary>自动禁用规则 / INFO 参数</summary>
+          <div id="rules"></div>
+          <div class="two-cols">
+            <label
+              >mu<input
+                id="mu"
+                type="number"
+                min="0"
+                step="0.001"
+                value="0.01" /></label
+            ><label
+              >delta<input
+                id="delta"
+                type="number"
+                min="0"
+                step="0.001"
+                value="0.001"
+            /></label>
+          </div>
+        </details>
+        <div class="row">
+          <button id="analyze" class="primary grow">生成碰撞矩阵</button
+          ><button id="cancel">取消</button>
+        </div>
+        <progress id="progress" max="1" value="0"></progress>
+        <div id="job-status" class="muted">等待分析</div>
+        <div id="stale" class="warning">统计待更新</div>
+        <div class="section-title spaced">碰撞对筛选</div>
+        <div class="row">
+          <label class="grow"
+            >最多 link 对<input
+              id="top-k"
+              type="number"
+              min="0"
+              value="20" /></label
+          ><button id="preview-topk">预览</button
+          ><button id="undo">撤销</button>
+        </div>
+        <div id="topk-report" class="muted">
+          按接近率、碰撞率和最小距离排序。
+        </div>
+        <button id="apply-topk" class="wide">应用 Top-K</button>
+        <div class="section-title spaced">选中碰撞对</div>
+        <div id="pair-detail" class="muted">点击矩阵中的一格查看详情。</div>
+        <div class="section-title spaced">关节位形</div>
+        <div class="row">
+          <button id="reset-pose">默认姿态</button
+          ><button id="restore-pose">恢复回放前</button>
+        </div>
+        <div id="joints"></div>
+        <div class="section-title spaced">计算耗时</div>
+        <div class="row">
+          <input
+            id="benchmark-samples"
+            type="number"
+            min="1"
+            max="10000"
+            value="200"
+            aria-label="测速样本数"
+          /><button id="benchmark">运行测速</button>
+        </div>
+        <div id="benchmark-report" class="muted">
+          碰撞 / 距离 · 含运动学更新 · 全量遍历
+        </div>
+      </aside>
+    </main>
+    <footer>
+      <span id="footer-status">所有模型与计算保留在本机</span
+      ><span>PINOCCHIO + COAL / LOCAL WORKSPACE</span>
+    </footer>
+    <div id="toast" role="status"></div>
+    <dialog id="browser">
+      <h2>选择本地文件</h2>
+      <div class="row">
+        <button id="browse-up">↑</button><input id="browse-path" /><button
+          id="browse-go"
+        >
+          前往
+        </button>
+      </div>
+      <div id="browse-entries"></div>
+      <button id="browse-close">关闭</button>
+    </dialog>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
