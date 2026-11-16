@@ -4,7 +4,21 @@
 
 ## 启动
 
-要求 Linux、Python 3.12、Node.js 22.12+（推荐 24）及支持 WebGL 的浏览器。
+要求 Linux、网络连接及支持 WebGL 的浏览器。一键准备环境：
+
+```bash
+./setup.sh
+# 或配置完成后直接启动
+./setup.sh --start
+```
+
+脚本自动准备 Python 3.12、固定版本的 Node.js、Python 依赖及 Xacro，并按锁文件安装、构建前端。没有 uv 时自动下载安装到项目 `.tools/`，需要 curl 或 wget。环境位于 `.venv/`，不需要 sudo，不修改 shell 配置，可从任意目录调用或重复执行。首次运行需要联网下载依赖。
+
+配置完成后运行 `.venv/bin/urdf-collision-checker`，打开 http://127.0.0.1:8765 。传入 `--port 9000` 可自定义端口。
+
+开发环境使用 `./setup.sh --dev`；浏览器测试需要额外执行 `.venv/bin/playwright install chromium`。OCS2 C++ 测试的系统头文件依赖见下方验证说明。普通配置会移除不需要的开发依赖，开发时请保留 `--dev`。
+
+手动安装方式（已有 Python 3.12、uv 和 Node.js 22.12+，推荐 Node.js 24）：
 
 ```bash
 # 在项目根目录

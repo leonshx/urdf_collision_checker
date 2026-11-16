@@ -880,6 +880,9 @@ dev = [
     { name = "playwright" },
     { name = "pytest" },
 ]
+setup = [
+    { name = "nodejs-wheel" },
+]
 test = [
     { name = "httpx" },
     { name = "pytest" },
@@ -895,6 +898,7 @@ requires-dist = [
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28" },
     { name = "httpx", marker = "extra == 'test'", specifier = ">=0.28" },
     { name = "nodejs-wheel", marker = "extra == 'dev'", specifier = "==24.19.0" },
+    { name = "nodejs-wheel", marker = "extra == 'setup'", specifier = "==24.19.0" },
     { name = "numpy", specifier = "==2.5.5" },
     { name = "pin", specifier = "==4.1.0" },
     { name = "playwright", marker = "extra == 'dev'", specifier = "==1.65.2" },
@@ -905,7 +909,7 @@ requires-dist = [
     { name = "websockets", specifier = "==17.4" },
     { name = "xacro", marker = "extra == 'xacro'", specifier = ">=2" },
 ]
-provides-extras = ["test", "xacro", "dev"]
+provides-extras = ["setup", "test", "xacro", "dev"]
 
 [[package]]
 name = "uvicorn"
