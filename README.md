@@ -38,6 +38,8 @@ uv run urdf-collision-checker
 6. 运行测速，对比全量/选中集合的碰撞判断和距离计算，包含运动学更新，不提前退出。
 7. 生成配置，或保存工程以便之后继续审查。工程引用原模型，不复制模型包。
 
+拖动左右侧栏边界可调整中央工作区宽度，拖动三维视图和矩阵之间的横向分隔条可调整上下比例。矩阵支持单元格宽度滑条及行名列右缘拖动，内容较多时双向滚动。分隔条支持方向键微调（Shift 加速）、Home 或双击复位，布局保存在当前浏览器中。
+
 ## 导出与 OCS2
 
 默认输出到项目 `config/`：
@@ -68,7 +70,7 @@ OCS2 原生读取测试需要 `g++`、Boost 与 Eigen3 头文件；Ubuntu 可安
 ```bash
 uv sync --extra dev
 uv run playwright install chromium
-COLLISION_E2E_URL=http://127.0.0.1:8765 uv run pytest tests/test_browser.py -q
+COLLISION_E2E_URL=http://127.0.0.1:8765 uv run pytest tests/test_browser.py tests/test_layout.py -q
 ```
 
 `tests/fixtures/sample.urdf` 是本项目创建的 MIT 许可测试模型，覆盖多几何、fixed、continuous、prismatic、mimic 和无几何中间 link。`examples/mabi_mobile/` 为工作区已有模型，另用于实际模型验证。

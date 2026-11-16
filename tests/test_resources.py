@@ -92,3 +92,30 @@ def test_negative_mimic_limits_constrain_default_and_sampling(tmp_path):
     result = analyze(robot, session.settings, {})
     for stat in result["stats"].values():
         assert 0.1 - 1e-9 <= stat["closest_pose"]["extension"] <= 0.2 + 1e-9
+
+
+def test_fixed_joint_zero_axis_keeps_kinematics(tmp_path):
+    from conftest import FIXTURE
+
+    baseline = Robot(FIXTURE)
+    tree = ET.fromstring(FIXTURE.read_text())
+    for joint in tree.findall("joint[@type='fixed']"):
+        ET.SubElement(joint, "axis", xyz="0 0 0")
+    path = tmp_path / "fixed_zero_axis.urdf"
+    path.write_text(ET.tostring(tree, encoding="unicode"))
+    robot = Robot(path)
+    assert robot.objects == baseline.objects
+    for actual, expected in zip(robot.geom_data.oMg, baseline.geom_data.oMg):
+        assert actual.homogeneous == pytest.approx(expected.homogeneous)
+
+
+@pytest.mark.parametrize("name", ["swing", "extension", "finger_mimic"])
+def test_movable_joint_zero_axis_reports_joint_name(tmp_path, name):
+    from conftest import FIXTURE
+
+    tree = ET.fromstring(FIXTURE.read_text())
+    tree.find(f"joint[@name='{name}']/axis").set("xyz", "0 0 0")
+    path = tmp_path / "movable_zero_axis.urdf"
+    path.write_text(ET.tostring(tree, encoding="unicode"))
+    with pytest.raises(ValueError, match=f"关节 {name} 的 axis.xyz"):
+        Robot(path)

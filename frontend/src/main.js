@@ -1,4 +1,5 @@
 import "./style.css";
+import { setupLayout } from "./layout.js";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
@@ -7,6 +8,7 @@ import { URDFAdapter } from "./vendor/robot_viewer/adapters/URDFAdapter.js";
 import { PointerJointDragControls } from "./vendor/robot_viewer/utils/JointDragControls.js";
 
 const $ = (id) => document.getElementById(id);
+const layout = setupLayout();
 const esc = (value) =>
   String(value ?? "").replace(
     /[&<>"']/g,
@@ -554,7 +556,8 @@ function renderMatrix() {
   const scroll = $("matrix"),
     x = scroll.scrollLeft,
     y = scroll.scrollTop;
-  scroll.innerHTML = `<table><thead><tr><th>LINK / LINK</th>${links.map((n) => `<th><div title="${esc(n)}">${esc(n)}</div></th>`).join("")}</tr></thead><tbody>${links
+  scroll.style.setProperty("--matrix-columns", links.length);
+  scroll.innerHTML = `<table><colgroup><col class="matrix-row-label"><col class="matrix-column" span="${links.length || 1}"></colgroup><thead><tr><th>LINK / LINK<div class="matrix-column-resizer" data-resize="label" role="separator" aria-label="调整矩阵行名列宽" aria-orientation="vertical" tabindex="0" title="拖动调整行名列宽，双击恢复默认"></div></th>${links.map((n) => `<th><div title="${esc(n)}">${esc(n)}</div></th>`).join("")}</tr></thead><tbody>${links
     .map(
       (a) =>
         `<tr><th>${esc(a)}</th>${links
@@ -568,6 +571,7 @@ function renderMatrix() {
     .join("")}</tbody></table>`;
   scroll.scrollLeft = x;
   scroll.scrollTop = y;
+  layout.refresh();
   scroll.querySelectorAll("td[data-id]").forEach((td) => {
     td.onclick = async (e) => {
       try {

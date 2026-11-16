@@ -57,17 +57,29 @@ class Robot:
         if root.tag != "robot":
             raise ValueError("文件必须包含 robot 根节点")
         self.name = root.get("name", "robot")
-        for elem in root.findall(".//origin") + root.findall(".//axis"):
+        for elem in root.findall(".//origin"):
             for attr in ("xyz", "rpy"):
                 if elem.get(attr) is None:
                     continue
                 values = [
                     finite(v, f"{elem.tag}.{attr}") for v in elem.get(attr).split()
                 ]
-                if len(values) != 3 or (
-                    elem.tag == "axis" and sum(v * v for v in values) == 0
-                ):
+                if len(values) != 3:
                     raise ValueError(f"无效的三维向量：{elem.tag}.{attr}")
+        for joint in root.findall("joint"):
+            # A fixed joint has no motion axis. CAD exporters commonly write
+            # axis="0 0 0" for it; neither kinematics engine uses that value.
+            if joint.get("type") == "fixed":
+                continue
+            axis = joint.find("axis")
+            if axis is None or axis.get("xyz") is None:
+                continue  # URDF's default axis is (1, 0, 0).
+            name = joint.get("name", "<unnamed>")
+            values = [
+                finite(v, f"关节 {name} 的 axis.xyz") for v in axis.get("xyz").split()
+            ]
+            if len(values) != 3 or math.hypot(*values) == 0:
+                raise ValueError(f"关节 {name} 的 axis.xyz 必须是有限、非零的三维向量")
         for geometry in root.findall(".//geometry"):
             if len(geometry) != 1 or geometry[0].tag not in {
                 "sphere",

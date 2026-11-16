@@ -54,7 +54,10 @@ header {
 }
 main {
   display: grid;
-  grid-template-columns: 258px minmax(380px, 1fr) 310px;
+  grid-template-columns:
+    var(--left-panel-width, 258px) 8px minmax(300px, 1fr)
+    8px var(--right-panel-width, 310px);
+  min-width: 760px;
   height: calc(100vh - 106px);
   min-height: 640px;
 }
@@ -233,14 +236,15 @@ summary {
   padding-top: 12px;
 }
 .workspace {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(180px, 57fr) 8px minmax(300px, 43fr);
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 #viewport {
-  flex: 1;
-  min-height: 260px;
+  min-height: 0;
+  min-width: 0;
   position: relative;
   background: radial-gradient(ellipse at center, #25363f, #141e25);
 }
@@ -252,6 +256,8 @@ summary {
   inset: 0;
 }
 .view-tools {
+  max-width: calc(100% - 24px);
+  flex-wrap: wrap;
   position: absolute;
   left: 15px;
   top: 13px;
@@ -328,21 +334,20 @@ h1 {
   font-size: 12px;
 }
 .matrix-panel {
-  height: 43%;
-  min-height: 240px;
-  max-height: 75%;
-  resize: vertical;
+  min-height: 0;
+  min-width: 0;
   overflow: hidden;
   padding: 15px;
-  border-top: 3px solid #3c525f;
   display: flex;
   flex-direction: column;
 }
 .matrix-panel .section-title {
+  flex-wrap: wrap;
   margin-bottom: 9px;
 }
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 9px;
 }
@@ -358,6 +363,7 @@ h1 {
 }
 .legend {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   font-size: 9px;
   color: #adbfca;
@@ -409,7 +415,104 @@ table {
   font:
     10px ui-monospace,
     monospace;
-  min-width: 100%;
+  min-width: 0;
+}
+#matrix table {
+  table-layout: fixed;
+  width: calc(
+    var(--matrix-label-width, 150px) + var(--matrix-columns, 0) *
+      (var(--matrix-cell-size, 26px) + 2px) + 4px
+  );
+}
+.matrix-row-label {
+  width: var(--matrix-label-width, 150px);
+}
+.matrix-column {
+  width: var(--matrix-cell-size, 26px);
+}
+#matrix th:first-child {
+  min-width: 0;
+  width: var(--matrix-label-width, 150px);
+  max-width: var(--matrix-label-width, 150px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+#matrix td {
+  width: var(--matrix-cell-size, 26px);
+  min-width: 0;
+  height: var(--matrix-cell-size, 26px);
+}
+.matrix-column-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+  touch-action: none;
+  background: #527180;
+}
+.matrix-sizing {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+.matrix-sizing label {
+  margin: 0;
+  font-size: 10px;
+}
+.matrix-sizing input {
+  width: 100px;
+}
+.matrix-sizing output {
+  font-size: 10px;
+  color: var(--muted);
+  min-width: 35px;
+}
+.splitter {
+  background: #23363f;
+  position: relative;
+  touch-action: none;
+  z-index: 4;
+}
+.splitter:hover,
+.splitter:focus-visible,
+.matrix-column-resizer:hover,
+.matrix-column-resizer:focus-visible {
+  background: #79bca9;
+  outline: none;
+}
+.splitter-vertical {
+  cursor: col-resize;
+}
+.splitter-horizontal {
+  cursor: row-resize;
+}
+.splitter::after {
+  content: "";
+  position: absolute;
+  background: #6a8995;
+  border-radius: 3px;
+}
+.splitter-vertical::after {
+  width: 2px;
+  height: 30px;
+  left: 3px;
+  top: calc(50% - 15px);
+}
+.splitter-horizontal::after {
+  height: 2px;
+  width: 40px;
+  top: 3px;
+  left: calc(50% - 20px);
+}
+.resizing-layout,
+.resizing-layout * {
+  cursor: var(--resize-cursor) !important;
+  user-select: none !important;
 }
 th {
   background: #1e2c35;
@@ -627,7 +730,9 @@ dialog h2 {
 }
 @media (max-width: 1100px) {
   main {
-    grid-template-columns: 215px minmax(360px, 1fr) 270px;
+    grid-template-columns:
+      var(--left-panel-width, 215px) 8px minmax(300px, 1fr)
+      8px var(--right-panel-width, 270px);
   }
   .view-tools {
     gap: 6px;

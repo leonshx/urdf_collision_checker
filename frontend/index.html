@@ -64,6 +64,16 @@
           排除 link 保留运动学链。矩阵以 link 对计数；每对可能包含多个几何检测。
         </div>
       </aside>
+      <div
+        id="left-divider"
+        class="splitter splitter-vertical"
+        data-resize="left"
+        role="separator"
+        aria-label="调整模型栏与工作区宽度"
+        aria-orientation="vertical"
+        tabindex="0"
+        title="左右拖动调整宽度，双击恢复默认"
+      ></div>
       <section class="workspace">
         <section id="viewport">
           <div class="view-tools">
@@ -96,6 +106,16 @@
             <p>加载 URDF，采样分析，在矩阵中审查并导出。</p>
           </div>
         </section>
+        <div
+          id="view-matrix-divider"
+          class="splitter splitter-horizontal"
+          data-resize="vertical"
+          role="separator"
+          aria-label="调整三维视图与矩阵高度"
+          aria-orientation="horizontal"
+          tabindex="0"
+          title="上下拖动调整三维视图和矩阵高度，双击恢复默认"
+        ></div>
         <section class="matrix-panel panel">
           <div class="section-title">
             <span>02 / 自碰撞矩阵</span
@@ -119,6 +139,21 @@
             ><button id="disable-filtered">禁用筛选项</button
             ><button id="reset-selection">恢复自动建议</button>
           </div>
+          <div class="matrix-sizing">
+            <label for="matrix-cell-size">单元格宽度</label>
+            <input
+              id="matrix-cell-size"
+              type="range"
+              min="20"
+              max="48"
+              step="1"
+              value="26"
+            />
+            <output id="matrix-cell-size-value" for="matrix-cell-size"
+              >26 px</output
+            >
+            <span class="muted">拖动行名列右缘调整列宽</span>
+          </div>
           <div class="legend">
             <span class="Adjacent">相邻</span
             ><span class="Default">默认碰撞</span
@@ -133,6 +168,16 @@
           </div>
         </section>
       </section>
+      <div
+        id="right-divider"
+        class="splitter splitter-vertical"
+        data-resize="right"
+        role="separator"
+        aria-label="调整工作区与设置栏宽度"
+        aria-orientation="vertical"
+        tabindex="0"
+        title="左右拖动调整宽度，双击恢复默认"
+      ></div>
       <aside class="right panel">
         <div class="section-title">03 / 分析与筛选</div>
         <div class="two-cols">
