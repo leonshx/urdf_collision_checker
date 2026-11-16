@@ -1,5 +1,7 @@
 # Collision Studio
 
+[简体中文](README.md) | [English](README.en.md)
+
 本地运行的 URDF 自碰撞矩阵编辑器：Pinocchio + Coal 计算，Three.js 显示，复用 robot_viewer 的 URDF 适配器和关节拖动组件。不依赖 ROS。
 
 ## 界面预览
@@ -106,4 +108,8 @@ COLLISION_E2E_URL=http://127.0.0.1:8765 uv run pytest tests/test_browser.py test
 
 首版面向树形 URDF 和本地单人工作流，不提供环境碰撞、闭链或末端 IK。采样未发现碰撞不代表整个运动空间永不碰撞，Top-K 也是计算预算下的经验筛选。服务仅监听 localhost；无需上传模型或调用外部计算服务。
 
-robot_viewer 复用代码、源版本与本地修改记录见 `frontend/src/vendor/robot_viewer/NOTICE.md`，OCS2 测试头文件保留原 BSD 许可证。
+## 鸣谢
+
+感谢 [fan-ziqi/robot_viewer](https://github.com/fan-ziqi/robot_viewer) 为本项目的 URDF 加载、三维显示和关节拖动交互提供参考。本项目复用了其中的 URDF 适配器与关节拖动等组件，并保留 Apache-2.0 许可证；分析界面与 Python 后端由本项目实现。
+
+复用代码、源版本与本地修改记录见 [NOTICE.md](frontend/src/vendor/robot_viewer/NOTICE.md)，原许可证见 [LICENSE](frontend/src/vendor/robot_viewer/LICENSE)。OCS2 测试头文件保留原 BSD 许可证。
