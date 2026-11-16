@@ -125,3 +125,40 @@ def test_blank_click_clears_only_view_selection(page):
     assert after["pairs"] == before["pairs"]
     assert after["settings"] == before["settings"]
     assert after["model"]["pose"] == before["model"]["pose"]
+
+
+def test_pending_checkbox_survives_pair_highlighting(page):
+    # A view-only rerender must preserve edits whose server response is pending.
+    pending = []
+    page.route("**/api/pairs", lambda route: pending.append(route))
+    cells = page.locator("#matrix td[data-id]")
+    edited_id = cells.first.get_attribute("data-id")
+    edited = page.locator(f'#matrix td[data-id="{edited_id}"] input')
+    assert not edited.first.is_checked()
+    edited.first.check()
+    page.wait_for_function("true")  # Pump the intercepted request callback.
+    assert len(pending) == 1
+    other = page.locator(f'#matrix td[data-id]:not([data-id="{edited_id}"])').first
+    other.click(position={"x": 2, "y": 2})
+    assert edited.count() == 2
+    assert all(box.is_checked() for box in edited.all())
+    assert page.locator("td.selected").count() == 2
+    pending.pop().continue_()
+    page.wait_for_function(
+        "id => window.collisionStudio.session.pairs.find(p => p.id === id).manual === false",
+        arg=edited_id,
+    )
+    assert all(box.is_checked() for box in edited.all())
+    # Highlight the edited pair and then its symmetric cell: neither edits it.
+    for index in (0, 1):
+        page.locator(f'#matrix td[data-id="{edited_id}"]').nth(index).click(
+            position={"x": 2, "y": 2}
+        )
+        assert all(box.is_checked() for box in edited.all())
+    page.unroute("**/api/pairs")
+    edited.first.uncheck()
+    page.wait_for_function(
+        "id => window.collisionStudio.session.pairs.find(p => p.id === id).manual === true",
+        arg=edited_id,
+    )
+    assert all(not box.is_checked() for box in edited.all())

@@ -37,6 +37,8 @@ let toastTimer,
   browseParent = ".",
   pendingTopk = null;
 let blankPress = null;
+// Keep in-flight checkbox edits across view-only and older-response rerenders.
+const pendingPairChecks = new Map();
 function toast(message, error = false) {
   $("toast").textContent = message;
   $("toast").className = error ? "error" : "";
@@ -487,6 +489,8 @@ async function syncPose() {
 }
 
 async function accept(session) {
+  if (session?.model.revision !== state.session?.model.revision)
+    pendingPairChecks.clear();
   state.session = session;
   if (!session) return;
   if (state.selected && !session.pairs.some((p) => p.id === state.selected))
@@ -632,7 +636,8 @@ function renderMatrix() {
           .map((b) => {
             if (a === b) return '<td class="diagonal">·</td>';
             const p = map.get(JSON.stringify([a, b]));
-            return `<td data-id="${esc(p.id)}" class="${p.reason || ""} ${p.enabled ? "" : "disabled"} ${state.selected === p.id ? "selected" : ""} ${filterPair(p) ? "" : "filtered"}" title="${esc(a)} ↔ ${esc(b)} / ${p.reason || "启用"}${p.stats ? ` / 碰撞 ${(p.stats.collision_rate * 100).toFixed(1)}% / 最近 ${p.stats.min_distance.toFixed(4)}m` : ""}"><input type="checkbox" aria-label="禁用 ${esc(a)} 与 ${esc(b)}" ${p.enabled ? "" : "checked"}></td>`;
+            const checked = pendingPairChecks.get(p.id)?.checked ?? !p.enabled;
+            return `<td data-id="${esc(p.id)}" class="${p.reason || ""} ${checked ? "disabled" : ""} ${state.selected === p.id ? "selected" : ""} ${filterPair(p) ? "" : "filtered"}" title="${esc(a)} ↔ ${esc(b)} / ${p.reason || "启用"}${p.stats ? ` / 碰撞 ${(p.stats.collision_rate * 100).toFixed(1)}% / 最近 ${p.stats.min_distance.toFixed(4)}m` : ""}"><input type="checkbox" aria-label="禁用 ${esc(a)} 与 ${esc(b)}" ${checked ? "checked" : ""}></td>`;
           })
           .join("")}</tr>`,
     )
@@ -645,14 +650,32 @@ function renderMatrix() {
       try {
         state.selected = td.dataset.id;
         if (e.target.matches("input")) {
-          await mutate(
-            "/pairs",
-            {
-              ids: [state.selected],
-              patch: { manual: !e.target.checked, lock: null },
-            },
-            "PATCH",
-          );
+          const id = td.dataset.id;
+          const revision = state.session.model.revision;
+          const edit = { checked: e.target.checked };
+          pendingPairChecks.set(id, edit);
+          renderMatrix();
+          renderDetail();
+          updateAppearance();
+          try {
+            await mutate(
+              "/pairs",
+              {
+                ids: [id],
+                patch: { manual: !edit.checked, lock: null },
+              },
+              "PATCH",
+            );
+          } finally {
+            // An older response must not erase a newer edit to this same pair.
+            if (
+              state.session?.model.revision === revision &&
+              pendingPairChecks.get(id) === edit
+            ) {
+              pendingPairChecks.delete(id);
+              renderMatrix();
+            }
+          }
         } else {
           renderMatrix();
           renderDetail();
