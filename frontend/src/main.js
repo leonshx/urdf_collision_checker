@@ -1,5 +1,6 @@
 import "./style.css";
 import { setupLayout } from "./layout.js";
+import { setupPartTooltip } from "./partTooltip.js";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
@@ -35,6 +36,7 @@ let toastTimer,
   matrixPairs = [],
   browseParent = ".",
   pendingTopk = null;
+let blankPress = null;
 function toast(message, error = false) {
   $("toast").textContent = message;
   $("toast").className = error ? "error" : "";
@@ -104,7 +106,13 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 $("viewport").appendChild(renderer.domElement);
+const partTooltip = setupPartTooltip(
+  renderer.domElement,
+  $("viewport"),
+  () => state,
+);
 const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.addEventListener("start", partTooltip.hide);
 orbit.enableDamping = true;
 orbit.target.set(0, 0, 0.6);
 scene.add(new THREE.HemisphereLight(0xe1f3ff, 0x485957, 2.2));
@@ -116,6 +124,7 @@ grid.rotation.x = Math.PI / 2;
 scene.add(grid);
 scene.add(new THREE.AxesHelper(0.35));
 new ResizeObserver(() => {
+  partTooltip.hide();
   const r = $("viewport").getBoundingClientRect();
   renderer.setSize(r.width, r.height);
   camera.aspect = r.width / r.height;
@@ -126,7 +135,50 @@ renderer.setAnimationLoop(() => {
   renderer.render(scene, camera);
 });
 
+renderer.domElement.addEventListener("pointermove", (event) => {
+  if (blankPress?.id === event.pointerId) {
+    blankPress.movement = Math.max(
+      blankPress.movement,
+      Math.hypot(event.clientX - blankPress.x, event.clientY - blankPress.y),
+    );
+  }
+});
+renderer.domElement.addEventListener(
+  "pointerup",
+  (event) => {
+    const press = blankPress;
+    blankPress = null;
+    if (
+      !press ||
+      event.pointerId !== press.id ||
+      event.button !== 0 ||
+      press.movement > 4 ||
+      Math.hypot(event.clientX - press.x, event.clientY - press.y) > 4 ||
+      !state.ready ||
+      !state.selected
+    )
+      return;
+    state.drag._mouseMove(event);
+    if (state.drag.hovered) return;
+    // Selection is view-only. Discard pending old-pair distance responses without
+    // touching pair choices, the current pose or any sampling settings.
+    state.selected = null;
+    poseSequence++;
+    renderMatrix();
+    renderDetail();
+    updateAppearance();
+  },
+  { capture: true },
+);
+renderer.domElement.addEventListener("pointercancel", () => {
+  blankPress = null;
+});
+window.addEventListener("blur", () => {
+  blankPress = null;
+});
+
 function fit(selected = false) {
+  partTooltip.hide();
   if (!state.robot) return;
   state.robot.updateMatrixWorld(true);
   let box = new THREE.Box3();
@@ -158,6 +210,7 @@ function fit(selected = false) {
   orbit.update();
 }
 function applyPose(values) {
+  partTooltip.hide();
   const model = state.session?.model,
     resolved = { ...state.pose, ...values };
   if (model) {
@@ -197,6 +250,7 @@ function applyPose(values) {
   });
 }
 function updateAppearance() {
+  partTooltip.hide();
   if (!state.robot) return;
   const selected = pair();
   state.robot.traverse((node) => {
@@ -238,6 +292,8 @@ function updateAppearance() {
   });
 }
 async function loadView(model) {
+  partTooltip.hide();
+  blankPress = null;
   state.ready = false;
   state.viewError = null;
   state.pose = {};
@@ -335,6 +391,7 @@ async function loadView(model) {
     unified,
   );
   state.drag.onDragStart = () => {
+    partTooltip.hide();
     orbit.enabled = false;
   };
   state.drag.onDragEnd = () => {
@@ -350,16 +407,27 @@ async function loadView(model) {
     schedulePose();
   };
   // Joint dragging takes precedence over OrbitControls' pointer handler.
+  const viewSignal = viewListenerSignal();
   renderer.domElement.addEventListener(
     "pointerdown",
     (e) => {
-      if (e.button === 0) {
+      if (e.button === 0 && state.ready && state.drag) {
         state.drag._mouseMove(e);
+        blankPress =
+          state.ready && !state.drag.hovered
+            ? {
+                id: e.pointerId,
+                x: e.clientX,
+                y: e.clientY,
+                movement: 0,
+              }
+            : null;
         state.drag._mouseDown(e);
       }
     },
-    { capture: true, signal: viewListenerSignal() },
+    { capture: true, signal: viewSignal },
   );
+  partTooltip.bind(viewSignal);
   applyPose(model.pose);
   const response = await api("/pose", { pose: state.pose });
   applyPose(response.pose);

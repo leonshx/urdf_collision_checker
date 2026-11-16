@@ -40,6 +40,9 @@ uv run urdf-collision-checker
 
 拖动左右侧栏边界可调整中央工作区宽度，拖动三维视图和矩阵之间的横向分隔条可调整上下比例。矩阵支持单元格宽度滑条及行名列右缘拖动，内容较多时双向滚动。分隔条支持方向键微调（Shift 加速）、Home 或双击复位，布局保存在当前浏览器中。
 
+鼠标移到可见的 collision 或 visual 部件上，会自动在指针旁显示所属 link 名称；移出、拖动或切换模型时隐藏，不影响关节拖动和相机操作。
+左键单击三维视图空白处可取消碰撞对高亮并恢复全部部件显示；矩阵勾选、检测配置和位形保持不变。拖动空白处调整视角不会清除选中。
+
 ## 导出与 OCS2
 
 默认输出到项目 `config/`：
@@ -70,7 +73,7 @@ OCS2 原生读取测试需要 `g++`、Boost 与 Eigen3 头文件；Ubuntu 可安
 ```bash
 uv sync --extra dev
 uv run playwright install chromium
-COLLISION_E2E_URL=http://127.0.0.1:8765 uv run pytest tests/test_browser.py tests/test_layout.py -q
+COLLISION_E2E_URL=http://127.0.0.1:8765 uv run pytest tests/test_browser.py tests/test_layout.py tests/test_view_interactions.py -q
 ```
 
 `tests/fixtures/sample.urdf` 是本项目创建的 MIT 许可测试模型，覆盖多几何、fixed、continuous、prismatic、mimic 和无几何中间 link。`examples/mabi_mobile/` 为工作区已有模型，另用于实际模型验证。
